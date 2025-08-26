@@ -257,12 +257,14 @@
     <header>
         <h1>Resource Allocation Systems</h1>
         <p>A Comprehensive Guide to Algorithms, Data Structures, and Implementation Strategies</p>
+        <p style="margin-top: 10px; font-size: 1em; opacity: 0.9;">Solving Large-Scale Unique Resource Distribution for Millions of Users</p>
     </header>
     
     <div class="container">
         <nav>
             <h2>Table of Contents</h2>
             <ul>
+                <li><a href="#problem-context">📌 Real-World Problem Context</a></li>
                 <li><a href="#introduction">Introduction</a></li>
                 <li><a href="#fundamental-concepts">Fundamental Concepts</a></li>
                 <li><a href="#core-data-structures">Core Data Structures</a></li>
@@ -274,6 +276,10 @@
                 <li><a href="#diagrams">Visual Diagrams</a></li>
             </ul>
         </nav>
+        
+        <div id="problem-context-content">
+            <!-- Problem context will be loaded here -->
+        </div>
         
         <div id="markdown-content">
             <!-- Markdown content will be inserted here -->
@@ -327,6 +333,21 @@
     <a href="#top" class="back-to-top">↑ Top</a>
     
     <script>
+        // Load problem context first
+        fetch('problem-context.html')
+            .then(response => response.text())
+            .then(html => {
+                const container = document.getElementById('problem-context-content');
+                const section = document.createElement('div');
+                section.className = 'content-section';
+                section.id = 'problem-context';
+                section.style.backgroundColor = '#fff3cd';
+                section.style.borderLeft = '4px solid #ff9800';
+                section.innerHTML = html;
+                container.appendChild(section);
+            })
+            .catch(err => console.error('Error loading problem context:', err));
+        
         // Insert markdown content
         fetch('temp-content.html')
             .then(response => response.text())
