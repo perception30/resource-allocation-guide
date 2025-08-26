@@ -1,0 +1,120 @@
+@startuml practical-implementation
+!theme plain
+title Practical Implementation: Multi-Layer Resource Allocator
+
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+skinparam actorBackgroundColor #E3F2FD
+skinparam databaseBackgroundColor #E8F5E9
+skinparam participantBackgroundColor #F3E5F5
+skinparam actorFontColor #333333
+skinparam participantFontColor #333333
+skinparam databaseFontColor #333333
+skinparam sequenceMessageFontColor #333333
+skinparam noteFontColor #333333
+skinparam defaultFontColor #333333
+
+actor "User Application" as user
+participant "API Gateway" as api
+participant "Load Balancer" as lb
+
+participant "Service Instance 1" as s1
+participant "Service Instance 2" as s2
+participant "Service Instance 3" as s3
+
+database "Redis Cache\n(L1 Cache)" as redis
+database "ScyllaDB\n(Primary Storage)" as scylla
+database "S3\n(Audit Logs)" as s3
+
+participant "Bloom Filter" as bloom
+participant "LRU Cache" as lru
+participant "Lock Manager" as lock
+
+== Allocation Request Flow ==
+
+user -> api : POST /allocate\n{user_id: 123, count: 10}
+api -> lb : Route request
+lb -> s1 : Forward to least loaded
+
+activate s1
+s1 -> lock : Acquire user lock\n(distributed lock)
+
+s1 -> lru : Check local cache
+lru --> s1 : Cache miss
+
+s1 -> bloom : Check if user\nhas allocations
+bloom --> s1 : Probably yes
+
+s1 -> redis : GET user:123:state
+redis --> s1 : {cursor: 450,\nbitmap: ...,\nlast_alloc: ...}
+
+s1 -> s1 : Apply allocation algorithm
+note right : Deterministic sequence\ngeneration based on\nuser_id and cursor
+
+s1 -> redis : SET user:123:state\n(updated)
+s1 -> scylla : INSERT allocation\n(async write)
+s1 -> s3 : Log transaction\n(async)
+
+s1 -> lock : Release user lock
+deactivate s1
+
+s1 --> api : {success: true,\nresources: [451-460]}
+api --> user : 200 OK\n{resources: [...]}
+
+== High Contention Scenario ==
+
+user -> api : Multiple concurrent\nrequests
+api -> lb : Distribute load
+lb -> s1 : Request 1
+lb -> s2 : Request 2
+lb -> s3 : Request 3
+
+activate s1
+activate s2
+activate s3
+
+s1 -> lock : Try acquire lock
+s2 -> lock : Try acquire lock
+s3 -> lock : Try acquire lock
+
+lock --> s1 : Lock acquired
+lock --> s2 : Wait (backoff)
+lock --> s3 : Wait (backoff)
+
+s1 -> s1 : Process allocation
+s1 -> redis : Update state
+s1 -> lock : Release
+
+lock --> s2 : Lock acquired
+s2 -> s2 : Process allocation
+
+deactivate s1
+deactivate s2
+deactivate s3
+
+== Failure Recovery ==
+
+s1 -> redis : Connection failed
+activate s1
+s1 -> s1 : Fallback to ScyllaDB
+s1 -> scylla : Read user state
+scylla --> s1 : State data
+s1 -> s1 : Continue allocation
+s1 -> s1 : Queue for later\ncache update
+deactivate s1
+
+note over scylla
+    ScyllaDB provides:
+    - Consistency
+    - Durability  
+    - Partition tolerance
+end note
+
+note over redis
+    Redis provides:
+    - Sub-ms latency
+    - High throughput
+    - Distributed locks
+end note
+
+@enduml

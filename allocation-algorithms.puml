@@ -1,0 +1,74 @@
+@startuml allocation-algorithms
+!theme plain
+title Resource Allocation Algorithms Flow
+
+skinparam backgroundColor #FEFEFE
+skinparam activityBackgroundColor #E3F2FD
+skinparam activityBorderColor #1976D2
+skinparam activityFontColor #333333
+skinparam defaultFontColor #333333
+
+|First-Fit Algorithm|
+start
+:Receive allocation request;
+:Start from first resource;
+while (More resources to check?) is (yes)
+    if (Resource size >= requested?) then (yes)
+        if (Resource is free?) then (yes)
+            :Allocate resource;
+            :Return resource ID;
+            stop
+        else (no)
+            :Move to next resource;
+        endif
+    else (no)
+        :Move to next resource;
+    endif
+endwhile (no)
+:Return allocation failed;
+stop
+
+|Best-Fit Algorithm|
+start
+:Receive allocation request;
+:Initialize best_size = infinity;
+:Initialize best_index = -1;
+:Scan all resources;
+while (More resources to check?) is (yes)
+    if (Resource is free AND size >= requested?) then (yes)
+        if (Resource size < best_size?) then (yes)
+            :Update best_size;
+            :Update best_index;
+        endif
+    endif
+    :Move to next resource;
+endwhile (no)
+if (best_index found?) then (yes)
+    :Allocate best_index resource;
+    :Return resource ID;
+else (no)
+    :Return allocation failed;
+endif
+stop
+
+|Round-Robin Algorithm|
+start
+:Receive allocation request;
+:Get current position;
+:Save start position;
+while (Not back to start?) is (yes)
+    if (Current resource is free?) then (yes)
+        :Allocate current resource;
+        :Update position = (position + 1) % total;
+        :Return resource ID;
+        stop
+    else (no)
+        :Move to next position;
+        :position = (position + 1) % total;
+    endif
+endwhile (no)
+:All resources checked;
+:Return allocation failed;
+stop
+
+@enduml

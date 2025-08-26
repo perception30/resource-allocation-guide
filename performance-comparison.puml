@@ -1,0 +1,79 @@
+@startuml performance-comparison
+!theme plain
+title Algorithm Performance Comparison
+
+skinparam backgroundColor #FEFEFE
+skinparam rectangleBackgroundColor #E3F2FD
+skinparam legendBackgroundColor #FFFFFF
+skinparam rectangleFontColor #333333
+skinparam defaultFontColor #333333
+
+legend top
+|= Algorithm |= Time Complexity |= Space Complexity |= Fragmentation |= Best Use Case |
+| First-Fit | O(n) | O(1) | High | Quick allocation |
+| Best-Fit | O(n) | O(1) | Medium | Memory conservation |
+| Worst-Fit | O(n) | O(1) | Low | Large future requests |
+| Buddy System | O(log n) | O(log n) | Medium | Power-of-2 sizes |
+| Bitmap | O(1) | O(n) | None | Dense allocation |
+| Round-Robin | O(1) avg | O(1) | None | Fair distribution |
+| Deterministic | O(1) | O(users) | None | Predictable patterns |
+endlegend
+
+package "Performance Metrics" {
+    
+    rectangle "Allocation Speed" as speed {
+        rectangle "Fastest" #C8E6C9 {
+            rectangle "Bitmap: O(1)" as bm_s
+            rectangle "Round-Robin: O(1) avg" as rr_s
+            rectangle "Deterministic: O(1)" as det_s
+        }
+        rectangle "Fast" #FFF59D {
+            rectangle "Buddy: O(log n)" as buddy_s
+        }
+        rectangle "Slower" #FFCDD2 {
+            rectangle "First-Fit: O(n)" as ff_s
+            rectangle "Best-Fit: O(n)" as bf_s
+        }
+    }
+    
+    rectangle "Memory Efficiency" as memory {
+        rectangle "Most Efficient" #C8E6C9 {
+            rectangle "Deterministic: O(users)" as det_m
+            rectangle "Round-Robin: O(1)" as rr_m
+        }
+        rectangle "Moderate" #FFF59D {
+            rectangle "Buddy: O(log n)" as buddy_m
+            rectangle "Free List: O(free)" as fl_m
+        }
+        rectangle "Less Efficient" #FFCDD2 {
+            rectangle "Bitmap: O(resources)" as bm_m
+            rectangle "Bloom Filter: O(items)" as bloom_m
+        }
+    }
+    
+    rectangle "Scalability" as scale {
+        rectangle "Highly Scalable" #C8E6C9 {
+            rectangle "Hierarchical" as hier_sc
+            rectangle "Distributed Hash" as dh_sc
+            rectangle "Bucket-Based" as bucket_sc
+        }
+        rectangle "Moderately Scalable" #FFF59D {
+            rectangle "Buddy System" as buddy_sc
+            rectangle "Bitmap with Segments" as bm_seg_sc
+        }
+        rectangle "Limited Scale" #FFCDD2 {
+            rectangle "Simple Linear" as linear_sc
+            rectangle "Global Lock" as lock_sc
+        }
+    }
+}
+
+note bottom
+    Trade-offs to consider:
+    • Speed vs Memory usage
+    • Fairness vs Efficiency  
+    • Simplicity vs Features
+    • Consistency vs Availability
+end note
+
+@enduml

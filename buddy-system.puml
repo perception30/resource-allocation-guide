@@ -1,0 +1,64 @@
+@startuml buddy-system
+!theme plain
+title Buddy System Memory Allocation
+
+skinparam backgroundColor #FEFEFE
+skinparam rectangleBackgroundColor #E3F2FD
+skinparam noteBackgroundColor #FFF9C4
+skinparam rectangleFontColor #333333
+skinparam noteFontColor #333333
+skinparam defaultFontColor #333333
+
+rectangle "Initial State: 1024KB Block" as init #C8E6C9 {
+    rectangle "1024KB Free" as b1024
+}
+
+rectangle "After 300KB Request" as step1 {
+    rectangle "Split 1024KB" as split1 {
+        rectangle "512KB" as b512_1 #FFCDD2
+        rectangle "512KB Free" as b512_2
+    }
+    
+    note right of b512_1
+        Further split for 300KB:
+        512 -> 256 + 256
+        Allocate 512KB
+        (internal fragmentation)
+    end note
+}
+
+rectangle "After Additional 200KB Request" as step2 {
+    rectangle "Memory Layout" as layout2 {
+        rectangle "512KB Allocated (300KB used)" as used1 #FFCDD2
+        rectangle "256KB Allocated (200KB used)" as used2 #FFCDD2  
+        rectangle "256KB Free" as free2 #C8E6C9
+    }
+}
+
+rectangle "After 100KB Request" as step3 {
+    rectangle "Final Layout" as layout3 {
+        rectangle "512KB Allocated" as a1 #FFCDD2
+        rectangle "256KB Allocated" as a2 #FFCDD2
+        rectangle "128KB Allocated (100KB used)" as a3 #FFCDD2
+        rectangle "128KB Free" as f3 #C8E6C9
+    }
+}
+
+rectangle "After Deallocating 200KB Block" as step4 {
+    rectangle "Coalescing Buddies" as coal {
+        rectangle "512KB Allocated" as c1 #FFCDD2
+        rectangle "512KB Free (Coalesced)" as c2 #C8E6C9
+    }
+    
+    note bottom of coal
+        256KB + 256KB buddies
+        coalesced into 512KB
+    end note
+}
+
+init -down-> step1 : Request 300KB
+step1 -down-> step2 : Request 200KB
+step2 -down-> step3 : Request 100KB
+step3 -down-> step4 : Deallocate 200KB
+
+@enduml

@@ -1,0 +1,89 @@
+@startuml hierarchical-allocation
+!theme plain
+title Hierarchical Resource Allocation
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontColor #333333
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+package "System Level (1000 Resources)" #E3F2FD {
+    component "Global Resource Manager" as GRM
+    
+    package "Department A (400 Resources)" #E8F5E9 {
+        component "Dept A Manager" as DAM
+        
+        package "Team 1 (200 Resources)" {
+            component "Team 1 Manager" as T1M
+            rectangle "User A1 (50)" as UA1 #FFCDD2
+            rectangle "User A2 (75)" as UA2 #FFCDD2
+            rectangle "User A3 (75)" as UA3 #FFCDD2
+        }
+        
+        package "Team 2 (200 Resources)" {
+            component "Team 2 Manager" as T2M
+            rectangle "User B1 (100)" as UB1 #FFCDD2
+            rectangle "User B2 (50)" as UB2 #FFCDD2
+            rectangle "Available (50)" as T2A #FFF9C4
+        }
+    }
+    
+    package "Department B (350 Resources)" #FFEBEE {
+        component "Dept B Manager" as DBM
+        
+        package "Team 3 (200 Resources)" {
+            component "Team 3 Manager" as T3M
+            rectangle "User C1 (80)" as UC1 #FFCDD2
+            rectangle "User C2 (70)" as UC2 #FFCDD2
+            rectangle "Available (50)" as T3A #FFF9C4
+        }
+        
+        package "Team 4 (150 Resources)" {
+            component "Team 4 Manager" as T4M
+            rectangle "User D1 (150)" as UD1 #FFCDD2
+        }
+    }
+    
+    package "Unallocated (250 Resources)" #FFF9C4 {
+        component "Reserve Pool" as RP
+    }
+}
+
+GRM --> DAM : Quota: 400
+GRM --> DBM : Quota: 350
+GRM --> RP : Reserve: 250
+
+DAM --> T1M : Quota: 200
+DAM --> T2M : Quota: 200
+
+DBM --> T3M : Quota: 200
+DBM --> T4M : Quota: 150
+
+T1M --> UA1 : Allocated: 50
+T1M --> UA2 : Allocated: 75
+T1M --> UA3 : Allocated: 75
+
+T2M --> UB1 : Allocated: 100
+T2M --> UB2 : Allocated: 50
+
+T3M --> UC1 : Allocated: 80
+T3M --> UC2 : Allocated: 70
+
+T4M --> UD1 : Allocated: 150
+
+note bottom of GRM
+    Enforcement Levels:
+    1. Hard Limit: Cannot exceed quota
+    2. Soft Limit: Can borrow from reserve
+    3. Elastic: Can scale based on demand
+end note
+
+note right of RP
+    Reserve pool handles:
+    - Burst requests
+    - Emergency allocations
+    - Rebalancing between departments
+end note
+
+@enduml

@@ -1,0 +1,5 @@
+bucket-name.txt
+bucket-policy.json
+bucket-policy-final.json
+*.base64
+.DS_Store

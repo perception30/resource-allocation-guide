@@ -1,0 +1,74 @@
+@startuml resource-allocation-overview
+!theme plain
+title Resource Allocation System Overview
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontColor #333333
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+package "Resource Allocation System" {
+    
+    package "Core Components" #E3F2FD {
+        component [Resource Pool] as pool
+        component [Allocation Manager] as manager
+        component [Request Queue] as queue
+        component [State Tracker] as tracker
+    }
+    
+    package "Data Structures" #E8F5E9 {
+        component [Bitmap] as bitmap
+        component [Free List] as freelist
+        component [Bloom Filter] as bloom
+        component [Buddy System] as buddy
+    }
+    
+    package "Allocation Algorithms" #FFEBEE {
+        component [First-Fit] as ff
+        component [Best-Fit] as bf
+        component [Round-Robin] as rr
+        component [Priority-Based] as pb
+    }
+    
+    package "Optimization Layer" #FFF9C4 {
+        component [Cache] as cache
+        component [Batch Processor] as batch
+        component [Lock-Free Queue] as lockfree
+    }
+}
+
+actor User as user
+database "Persistent Storage" as db
+
+' Connections
+user --> queue : Request Resources
+queue --> manager : Process Request
+manager --> tracker : Check Availability
+tracker --> bitmap : Query State
+tracker --> bloom : Probabilistic Check
+manager --> ff : Apply Algorithm
+manager --> bf : Apply Algorithm
+manager --> rr : Apply Algorithm
+manager --> pb : Apply Algorithm
+manager --> pool : Allocate
+pool --> user : Return Resources
+tracker --> db : Persist State
+cache --> manager : Speed Up Access
+batch --> queue : Batch Processing
+
+note right of pool
+    Resources can be:
+    - Memory blocks
+    - CPU cycles
+    - Network bandwidth
+    - Storage space
+    - Connections
+end note
+
+note bottom of bloom
+    Probabilistic structures
+    trade accuracy for space
+end note
+
+@enduml

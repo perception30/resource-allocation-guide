@@ -1,0 +1,84 @@
+@startuml bankers-algorithm
+!theme plain
+title Banker's Algorithm - Deadlock Avoidance
+
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipantBackgroundColor #E3F2FD
+skinparam sequenceLifeLineBackgroundColor #FAFAFA
+skinparam sequenceParticipantFontColor #333333
+skinparam sequenceMessageFontColor #333333
+skinparam noteFontColor #333333
+skinparam defaultFontColor #333333
+
+participant "Process P1" as P1
+participant "Process P2" as P2
+participant "Process P3" as P3
+participant "Banker's Algorithm" as BA
+database "Resource Pool" as RP
+
+note over RP
+    Total Resources: [10, 5, 7]
+    Available: [3, 3, 2]
+end note
+
+note over BA
+    Current Allocation:
+    P1: [0, 1, 0]
+    P2: [2, 0, 0]
+    P3: [3, 0, 2]
+    
+    Max Demand:
+    P1: [7, 5, 3]
+    P2: [3, 2, 2]
+    P3: [9, 0, 2]
+end note
+
+P1 -> BA : Request [1, 0, 2]
+activate BA
+
+BA -> BA : Check if request <= Need
+note right : Need[P1] = Max[P1] - Allocation[P1]\n= [7,5,3] - [0,1,0] = [7,4,3]\n[1,0,2] <= [7,4,3] ✓
+
+BA -> BA : Check if request <= Available
+note right : [1,0,2] <= [3,3,2] ✓
+
+BA -> BA : Tentatively allocate
+note right : Available = [3,3,2] - [1,0,2] = [2,3,0]\nAllocation[P1] = [0,1,0] + [1,0,2] = [1,1,2]
+
+BA -> BA : Run Safety Algorithm
+note right : Find safe sequence
+
+group Safety Check
+    BA -> BA : Work = [2,3,0]
+    BA -> BA : Can P2 finish?\nNeed[P2] = [1,2,2]\n[1,2,2] <= [2,3,0]? No
+    BA -> BA : Can P3 finish?\nNeed[P3] = [6,0,0]\n[6,0,0] <= [2,3,0]? No
+    BA -> BA : Can P1 finish?\nNeed[P1] = [6,4,1]\n[6,4,1] <= [2,3,0]? No
+    BA -> BA : No safe sequence found!
+end
+
+BA -> BA : Rollback allocation
+note right : Restore Available = [3,3,2]\nRestore Allocation[P1] = [0,1,0]
+
+BA --> P1 : Request Denied\n(Would cause unsafe state)
+deactivate BA
+
+P2 -> BA : Request [1, 0, 0]
+activate BA
+
+BA -> BA : Check and tentatively allocate
+note right : Available = [3,3,2] - [1,0,0] = [2,3,2]\nAllocation[P2] = [3,0,0]
+
+group Safety Check - Success
+    BA -> BA : Work = [2,3,2]
+    BA -> BA : Can P2 finish?\nNeed[P2] = [0,2,2]\n[0,2,2] <= [2,3,2]? Yes!
+    BA -> BA : P2 finishes, Work = [5,3,2]
+    BA -> BA : Can P1 finish?\nNeed[P1] = [7,4,3]\n[7,4,3] <= [5,3,2]? No
+    BA -> BA : Can P3 finish?\nNeed[P3] = [6,0,0]\n[6,0,0] <= [5,3,2]? No
+    BA -> BA : Continue checking...
+    note right : Safe sequence found:\n<P2, P3, P1>
+end
+
+BA --> P2 : Request Granted
+BA -> RP : Update resources
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml state-transitions
+!theme plain
+title Resource State Transitions
+
+skinparam backgroundColor #FEFEFE
+skinparam stateBackgroundColor #E3F2FD
+skinparam stateBorderColor #1976D2
+skinparam stateFontColor #333333
+skinparam defaultFontColor #333333
+
+[*] --> Available : Initialize
+
+state Available #C8E6C9 {
+    Available : Resource is free
+    Available : Can be allocated
+}
+
+state Reserved #FFF59D {
+    Reserved : Tentatively allocated
+    Reserved : Waiting for confirmation
+}
+
+state Allocated #FFCDD2 {
+    Allocated : In use by process
+    Allocated : Cannot be reassigned
+}
+
+state Blocked #FFE0B2 {
+    Blocked : Temporarily unavailable
+    Blocked : Maintenance/Error state
+}
+
+state Deallocating #FFF9C4 {
+    Deallocating : Being released
+    Deallocating : Cleanup in progress
+}
+
+Available --> Reserved : Request received
+Reserved --> Allocated : Confirmed
+Reserved --> Available : Timeout/Cancel
+Allocated --> Deallocating : Release request
+Deallocating --> Available : Cleanup complete
+Available --> Blocked : Maintenance/Error
+Blocked --> Available : Issue resolved
+Allocated --> Blocked : Error detected
+Blocked --> Deallocating : Force release
+
+note right of Reserved
+    Reservation timeout prevents
+    resource hoarding
+end note
+
+note left of Blocked
+    Admin intervention may
+    be required
+end note
+
+note bottom of Deallocating
+    May involve:
+    - Data cleanup
+    - State persistence
+    - Notification of waiters
+end note
+
+@enduml
